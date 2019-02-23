@@ -9,18 +9,22 @@
 #include "I2C_1602LCD.h"
 #include <util/delay.h>
 
+unsigned char slaveAddress = 0;
+
 /************************************************************************/
 /* Initializes the LCD for 4-Bit mode                                   */
 /************************************************************************/
-void initLCD(unsigned char slaveAddress)
+void initLCD(unsigned char slave)
 {
 	setupI2C();
 	_delay_ms(500);
 	
 	sendStartSequence();
 	
-	if(sendSlaveAddress(slaveAddress))
+	if(sendSlaveAddress(slave))
 	{
+		slaveAddress = slave;
+		
 		//Init LCD
 		_delay_ms(15);
 		sendByte(0b00110100);
@@ -70,6 +74,7 @@ void initLCD(unsigned char slaveAddress)
 		sendByte(0b11101100);
 		sendByte(0b11101000);
 	}
+	sendStopSequence();
 }
 
 /************************************************************************/
@@ -77,11 +82,16 @@ void initLCD(unsigned char slaveAddress)
 /************************************************************************/
 void sendCommand(unsigned char command)
 {
+	sendStartSequence();
+	sendByte(slaveAddress);
+	
 	_delay_us(40);
 	sendByte((0xF0 &command) | (0b00001100));
 	sendByte((0xF0 &command) | (0b00001000));
 	sendByte(((0x0F &command)<<4) | (0b00001100));
 	sendByte(((0x0F &command)<<4) | (0b00001000));
+	
+	sendStopSequence();
 }
 
 /************************************************************************/
@@ -89,11 +99,16 @@ void sendCommand(unsigned char command)
 /************************************************************************/
 void sendData(unsigned char command)
 {
+	sendStartSequence();
+	sendByte(slaveAddress);
+	
 	_delay_us(40);
 	sendByte((0xF0 &command) | (0b00001101));
 	sendByte((0xF0 &command) | (0b00001001));
 	sendByte(((0x0F &command)<<4) | (0b00001101));
 	sendByte(((0x0F &command)<<4) | (0b00001001));
+	
+	sendStopSequence();
 }
 
 /************************************************************************/
